@@ -1164,8 +1164,7 @@ static int __init egis512_init(void)
 {
 	int status = 0;
 	int rc = 0;
-	int sim_val = -1;
-/*
+
     int sim_gpio = -1;
     int sim_val = 1;
     struct device_node *node = NULL;
@@ -1173,8 +1172,7 @@ static int __init egis512_init(void)
     node = of_find_compatible_node(NULL, NULL, "oppo,fp_common");
 	sim_gpio = of_get_named_gpio(node, "oppo,fp-id0", 0);
 	sim_val = __gpio_get_value(sim_gpio);
-*/
-	sim_val = g_fingerprint;
+
     printk("%s, Get FP_ID from GPIO_PIN is / FP_ID = %d.\n", __func__,sim_val);
 
     if(1 == sim_val){ 
