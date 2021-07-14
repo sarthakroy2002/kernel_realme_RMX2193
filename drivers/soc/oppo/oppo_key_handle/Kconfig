@@ -1,0 +1,9 @@
+config OPPO_FORCE_DUMP
+	bool "config oppo force dump"
+	help
+		define force dump functions
+
+config OPPO_FORCE_TPLG
+	bool "config oppo force tp log"
+	help
+		define force tp log functions
