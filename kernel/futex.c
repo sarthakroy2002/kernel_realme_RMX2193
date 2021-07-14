@@ -2621,8 +2621,17 @@ static void futex_wait_queue_me(struct futex_hash_bucket *hb, struct futex_q *q,
 		 * flagged for rescheduling. Only call schedule if there
 		 * is no timeout, or if it has yet to expire.
 		 */
+#if defined(VENDOR_EDIT) && defined(CONFIG_OPPO_HEALTHINFO)
+// Liujie.Xie@TECH.Kernel.Sched, 2019/08/29, add for stuck monitor
+        if (!timeout || timeout->task) {
+            current->in_futex = 1;
+            freezable_schedule();
+            current->in_futex = 0;
+        }
+#else
 		if (!timeout || timeout->task)
 			freezable_schedule();
+#endif
 	}
 	__set_current_state(TASK_RUNNING);
 }
