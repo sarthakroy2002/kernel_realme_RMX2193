@@ -58,7 +58,6 @@ static int owner_check(const struct xt_mtchk_param *par)
 
 	return 0;
 }
-
 static bool
 owner_mt(const struct sk_buff *skb, struct xt_action_param *par)
 {
@@ -66,7 +65,7 @@ owner_mt(const struct sk_buff *skb, struct xt_action_param *par)
 	const struct file *filp;
 	struct sock *sk = skb_to_full_sk(skb);
 	struct net *net = xt_net(par);
-
+ 
 	if (sk == NULL || sk->sk_socket == NULL)
 		return (info->match ^ info->invert) == 0;
 	else if (info->match & info->invert & XT_OWNER_SOCKET)
