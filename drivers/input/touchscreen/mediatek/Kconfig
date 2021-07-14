@@ -156,3 +156,27 @@ config TOUCHSCREEN_MTK_FOCALTECH_FHD
 	  If unsure, say N.
 
 endif
+
+config TOUCHSCREEN_HIMAX_CHIPSET
+	bool "Himax touchpanel CHIPSET"
+	depends on I2C
+	help
+	  Say Y here if you have a Himax CHIPSET touchscreen.
+	  HIMAX controllers are multi touch controllers which can
+	  report 10 touches at a time.
+
+          If unsure, say N.
+source "drivers/input/touchscreen/mediatek/hxtp83102/Kconfig"
+
+config TOUCHSCREEN_ILI9882N
+	bool "ILITEK Touchscreen"
+	help
+	  Say Y here if you have ILITEK touch panel.
+	  If unsure, say N.
+source "drivers/input/touchscreen/mediatek/ili9882n/Kconfig"
+
+#ifdef ODM_WT_EDIT
+# Tongxing.Liu@ODM_WT.BSP.Touchscreen.Base,2019/10/04,bringup add for xl and hlt touchscreen mould config.
+source "drivers/input/touchscreen/mediatek/ili9881h/Kconfig"
+source "drivers/input/touchscreen/mediatek/NT36525B/Kconfig"
+#endif
