@@ -53,6 +53,12 @@
 #include "mtk_leds_hal.h"
 #include "../mtk_leds_drv.h"
 
+#ifdef VENDOR_EDIT
+//Zeke.Shi@RM.MM.Display.Lcd, 2020/01/10, add for sau mode.
+#include <mt-plat/mtk_boot_common.h>
+extern unsigned long silence_mode;
+#endif /*VENDOR_EDIT*/
+
 /* for LED&Backlight bringup, define the dummy API */
 #ifndef CONFIG_MTK_PMIC_NEW_ARCH
 u16 pmic_set_register_value(u32 flagname, u32 val)
@@ -755,6 +761,14 @@ int mt_mt65xx_led_set_cust(struct cust_mt65xx_led *cust, int level)
 #endif
 	static bool button_flag;
 
+#ifdef VENDOR_EDIT
+    //Zeke.Shi@RM.MM.Display.Lcd, 2020/01/10, add for sau mode.
+	if (silence_mode) {
+		printk("%s silence_mode is %ld, set backlight to 0\n",__func__, silence_mode);
+		level = 0;
+	}
+#endif /*VENDOR_EDIT*/
+
 	switch (cust->mode) {
 
 	case MT65XX_LED_MODE_PWM:
@@ -818,7 +832,7 @@ int mt_mt65xx_led_set_cust(struct cust_mt65xx_led *cust, int level)
 	case MT65XX_LED_MODE_CUST_LCM:
 		if (strcmp(cust->name, "lcd-backlight") == 0)
 			bl_brightness_hal = level;
-		LEDS_DEBUG("%s backlight control by LCM\n", __func__);
+		//LEDS_DEBUG("%s backlight control by LCM\n", __func__);
 		/* warning for this API revork */
 		return ((cust_brightness_set) (cust->data)) (level, bl_div_hal);
 
@@ -849,6 +863,12 @@ void mt_mt65xx_led_work(struct work_struct *work)
 	mutex_unlock(&leds_mutex);
 }
 
+#ifdef ODM_WT_EDIT
+//Tongxing.Liu@ODM_WT.MM.Display.LCD, 2021/01/25, add LCD gamma control
+extern int primary_display_set_gamma_mode(unsigned int level);
+int gamma_flag = 1;
+#endif
+
 void mt_mt65xx_led_set(struct led_classdev *led_cdev, enum led_brightness level)
 {
 	struct mt65xx_led_data *led_data =
@@ -869,18 +889,48 @@ void mt_mt65xx_led_set(struct led_classdev *led_cdev, enum led_brightness level)
 		schedule_work(&led_data->work);
 		return;
 	}
+	pr_debug("%slevel=%d\n",__func__,level);
 	if (level != 0 && level * CONFIG_LIGHTNESS_MAPPING_VALUE < 255)
 		level = 1;
 	else
 		level = (level * CONFIG_LIGHTNESS_MAPPING_VALUE) / 255;
 
 	backlight_debug_log(led_data->level, level);
+#ifdef ODM_WT_EDIT
+//Hao.liang@ODM_WT.MM.Display.Lcd, 2019/10/30, LCD backlight switch 8bit to 11bit
+	disp_pq_notify_backlight_changed(level);
+#else
 	disp_pq_notify_backlight_changed((((1 << MT_LED_INTERNAL_LEVEL_BIT_CNT)
 					    - 1) * level + 127) / 255);
+#endif
 #ifdef CONFIG_MTK_AAL_SUPPORT
+#ifdef ODM_WT_EDIT
+
+    //Zeke.Shi@RM.MM.Display.Lcd, 2020/01/10, add for sau mode.
+    if (silence_mode) {
+        printk("%s silence_mode is %ld, set backlight to 0\n",__func__, silence_mode);
+        level = 0;
+    }
+//Zhenzhen.Wu@ODM_WT.MM.Display.Lcd, 2020/8/13, dynamic gamma control for lowest light
+	pr_debug("%s gamma=%d\n",__func__,level);
+	if(2==level){
+		if(1==gamma_flag){
+			primary_display_set_gamma_mode(1);
+			gamma_flag = 0;
+		}
+	}else if(level > 2){
+		if(0==gamma_flag){
+			primary_display_set_gamma_mode(0);
+			gamma_flag = 1;
+		}
+	}
+//Hao.liang@ODM_WT.MM.Display.Lcd, 2019/10/30, LCD backlight switch 8bit to 11bit
+	disp_aal_notify_backlight_changed(level);
+#else
 	disp_aal_notify_backlight_changed((((1 <<
 					MT_LED_INTERNAL_LEVEL_BIT_CNT)
 					    - 1) * level + 127) / 255);
+#endif
 #else
 	if (led_data->cust.mode == MT65XX_LED_MODE_CUST_BLS_PWM)
 		mt_mt65xx_led_set_cust(&led_data->cust,

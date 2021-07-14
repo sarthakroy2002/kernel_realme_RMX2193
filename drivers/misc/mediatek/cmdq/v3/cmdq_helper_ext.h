@@ -79,8 +79,10 @@ struct DumpFirstErrorStruct {
 
 #define CMDQ_LOG(string, args...) \
 do {			\
-	pr_notice("[CMDQ]"string, ##args); \
-	cmdq_core_save_first_dump("[CMDQ]"string, ##args); \
+	if (0) { \
+		pr_notice("[CMDQ]"string, ##args); \
+		cmdq_core_save_first_dump("[CMDQ]"string, ##args); \
+	} \
 } while (0)
 
 #define CMDQ_MSG(string, args...) \
@@ -720,7 +722,6 @@ struct cmdqRecStruct {
 
 	/* task executing data */
 	atomic_t exec;
-	atomic_t wait_protect;
 	enum TASK_STATE_ENUM state;	/* task life cycle */
 	s32 thread;
 	enum cmdq_thread_dispatch thd_dispatch;

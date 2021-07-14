@@ -356,7 +356,8 @@ endif
 endif
 
 ifneq (,$(filter $(CONFIG_MTK_PLATFORM), "mt6768"))
-obj-$(CONFIG_THERMAL) += mtk_ts_battery.o
+#Shouli.Wang@ODM_WT.BSP.CHG 2019/12/19, remove mtk battery thermal
+#obj-$(CONFIG_THERMAL) += mtk_ts_battery.o
 
 obj-$(CONFIG_THERMAL) += mtk_ts_bts.o
 obj-$(CONFIG_THERMAL) += mtk_ts_btsmdpa.o
@@ -380,6 +381,10 @@ obj-$(CONFIG_THERMAL) += mtk_ts_pmic.o
 ifneq ($(CONFIG_MTK_BIF_SUPPORT),)
 #obj-$(CONFIG_THERMAL) += mtk_ts_bif.o
 endif
+
+#wenhui.chen@Cam.Drv, 20201028, add for flashlight ntc
+obj-$(CONFIG_THERMAL) += mtk_ts_flashlight.o
+
 endif
 
 ifneq (,$(filter $(CONFIG_MTK_PLATFORM), "mt6785"))

@@ -20,6 +20,14 @@
 #include "kd_camera_typedef.h"
 #include "kd_camera_feature.h"
 
+#ifndef VENDOR_EDIT
+#define VENDOR_EDIT
+#endif
+
+#ifdef VENDOR_EDIT
+/*Yang.Zhang@Camera.Driver 2020/05/30 add for multi project using one build*/
+#include <soc/oppo/oppo_project.h>
+#endif
 
 #include "imgsensor_hw.h"
 
@@ -54,7 +62,14 @@ enum IMGSENSOR_RETURN imgsensor_hw_init(struct IMGSENSOR_HW *phw)
 	for (i = 0; i < IMGSENSOR_SENSOR_IDX_MAX_NUM; i++) {
 		psensor_pwr = &phw->sensor_pwr[i];
 
-		pcust_pwr_cfg = imgsensor_custom_config;
+		/* wenhui.chen@Cam.Drv, 20200615, sensor porting for pascalA/C*/
+		if(pascal_project() == 4){
+			pcust_pwr_cfg =imgsensor_custom_config_pascalA;
+		}else if(pascal_project() == 5){
+			pcust_pwr_cfg =imgsensor_custom_config_pascalC;
+		}else{
+			pcust_pwr_cfg = imgsensor_custom_config;
+		}
 		while (pcust_pwr_cfg->sensor_idx != i &&
 		       pcust_pwr_cfg->sensor_idx != IMGSENSOR_SENSOR_IDX_NONE)
 			pcust_pwr_cfg++;
@@ -201,12 +216,15 @@ enum IMGSENSOR_RETURN imgsensor_hw_power(
 
 
 	snprintf(str_index, sizeof(str_index), "%d", sensor_idx);
-	imgsensor_hw_power_sequence(
-	    phw,
-	    sensor_idx,
-	    pwr_status,
-	    platform_power_sequence,
-	    str_index);
+
+        if (pascal_project() != 5) { // pascal_project = 5 pascalI
+            imgsensor_hw_power_sequence(
+            phw,
+            sensor_idx,
+            pwr_status,
+            platform_power_sequence,
+            str_index);
+        }
 
 	imgsensor_hw_power_sequence(
 	    phw,

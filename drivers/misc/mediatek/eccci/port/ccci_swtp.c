@@ -27,6 +27,8 @@
 #include "ccci_swtp.h"
 #include "ccci_fsm.h"
 
+
+
 const struct of_device_id swtp_of_match[] = {
 	{ .compatible = SWTP_COMPATIBLE_DEVICE_ID, },
 	{},
@@ -89,6 +91,7 @@ static int swtp_switch_mode(struct swtp_t *swtp)
 	CCCI_LEGACY_ALWAYS_LOG(swtp->md_id, SYS, "%s mode %d\n",
 		__func__, swtp->curr_mode);
 	spin_unlock_irqrestore(&swtp->spinlock, flags);
+
 
 	return ret;
 }
@@ -187,6 +190,8 @@ int swtp_md_tx_power_req_hdlr(int md_id, int data)
 	return 0;
 }
 
+
+
 int swtp_init(int md_id)
 {
 	int ret = 0;
@@ -246,6 +251,7 @@ int swtp_init(int md_id)
 	}
 	register_ccci_sys_call_back(md_id, MD_SW_MD1_TX_POWER_REQ,
 		swtp_md_tx_power_req_hdlr);
+		
 	return ret;
 }
 

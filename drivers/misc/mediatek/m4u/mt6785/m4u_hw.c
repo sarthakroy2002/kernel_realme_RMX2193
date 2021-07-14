@@ -214,6 +214,8 @@ static int m4u_dump_rs_sta_info(int m4u_index, int mmu)
 	unsigned long m4u_base = gM4UBaseAddr[m4u_index];
 	unsigned int RegValue = 0;
 	int i = 0;
+	char buf[700] = {0};
+	int pos = 0;
 
 	M4UMSG("Dump IOMMU-MMU[%d]RS Status Register\n", mmu);
 	/* RS Status Register, Total 16 in 6785
@@ -222,10 +224,11 @@ static int m4u_dump_rs_sta_info(int m4u_index, int mmu)
 	for (i = 0; i < 16; i++) {
 		RegValue = M4U_ReadReg32(m4u_base, REG_MMU_RSx_ST(mmu, i));
 		if (RegValue != 0)
-			M4UMSG("0x%x = 0x%x\n", REG_MMU_RSx_ST(mmu, i),
+			pos += snprintf(buf + pos, sizeof(buf) - pos,
+				"0x%x = 0x%x, ", REG_MMU_RSx_ST(mmu, i),
 				RegValue);
 	}
-
+	M4UMSG("%s", buf);
 	return 0;
 }
 

@@ -16,8 +16,43 @@
 #include "eeprom_i2c_custom_driver.h"
 #include "kd_imgsensor.h"
 
+#ifndef VENDOR_EDIT
+#define VENDOR_EDIT
+#endif
+
+#define MAX_EEPROM_SIZE_16K 0x4000
+
 struct stCAM_CAL_LIST_STRUCT g_camCalList[] = {
 	/*Below is commom sensor */
+#ifdef VENDOR_EDIT
+	{PASCALA_TRULY_MAIN_S5KGM1SP_SENSOR_ID, 0xA0, Common_read_region, MAX_EEPROM_SIZE_16K},
+	/* ZeBin.Zhuang@Cam.Drv, 20200727, otp porting for 206AC!*/
+	{PASCALA_TRULY2_MAIN_S5KGM1SP_SENSOR_ID, 0xA0, Common_read_region, MAX_EEPROM_SIZE_16K},
+	/* Wang.Gaon@Cam.Drv, 20200615, otp porting for 206AC!*/
+	{PASCALA_SHENGTAI_WIDE_OV8856_SENSOR_ID, 0xA2, Common_read_region,MAX_EEPROM_SIZE_16K},
+	/* Wang.Gao@Cam.Drv, 20200826, otp porting for sunny ov8856*/
+	{PASCALA_SUNNY_WIDE_OV8856_SENSOR_ID, 0xA2, Common_read_region,MAX_EEPROM_SIZE_16K},
+	/* Yang.Zhang@Camera.Driver, 2020/06/17, add for [otp bringup] */
+	{PASCALC_SHENGTAI_MAIN_OV12A10_SENSOR_ID, 0xA0, Common_read_region,MAX_EEPROM_SIZE_16K},
+	{PASCALA_SHENGTAI_MACRO_OV02B10_SENSOR_ID, 0xA4, Common_read_region,MAX_EEPROM_SIZE_16K},
+	{PASCALI_QTECH_MAIN_OV13B10_SENSOR_ID, 0xA0, Common_read_region},
+#endif /* VENDOR_EDIT */
+#ifdef ODM_WT_EDIT
+	/* Zhen.Quan@Camera.Driver, 2019/11/20, add for [otp bringup] */
+	{OV12A10_SENSOR_ID, 0xA0, Common_read_region},
+	{S5KGM1SP_SENSOR_ID, 0xA0, Common_read_region},
+	{OV16A1Q_SENSOR_ID, 0xA8, Common_read_region},
+	{OV8856_SENSOR_ID, 0xA2, Common_read_region},
+	{GC5035_SENSOR_ID, 0xA8, Common_read_region},
+	{GC2375H_SENSOR_ID, 0xA4, Common_read_region},
+	{MONET_LH_MACRO_GC2375H_SENSOR_ID, 0xA4, Common_read_region},
+	{MONETX_HLT_MACRO_GC2375H_SENSOR_ID, 0xA4, Common_read_region},
+	{MONETD_LH_DEPTH_GC2375H_SENSOR_ID, 0xA4, Common_read_region},
+	{MONETX_HLT_MACRO_GC2385_SENSOR_ID, 0xA4, Common_read_region},
+	{MONETD_TRULY_OV12A10_SENSOR_ID, 0xA0, Common_read_region},
+	{MONET_GC5035_SENSOR_ID, 0xA8, Common_read_region},
+	{MONET_GC5035B_SENSOR_ID, 0xA8, Common_read_region},
+#else
 	{IMX519_SENSOR_ID, 0xA0, Common_read_region},
 	{S5K2T7SP_SENSOR_ID, 0xA4, Common_read_region},
 	{IMX338_SENSOR_ID, 0xA0, Common_read_region},
@@ -31,6 +66,7 @@ struct stCAM_CAL_LIST_STRUCT g_camCalList[] = {
 	{IMX386_MONO_SENSOR_ID, 0xA0, Common_read_region},
 	/*B+B. No Cal data for main2 OV8856*/
 	{S5K2P7_SENSOR_ID, 0xA0, Common_read_region},
+#endif /* ODM_WT_EDIT */
 	/*  ADD before this line */
 	{0, 0, 0}       /*end of list */
 };

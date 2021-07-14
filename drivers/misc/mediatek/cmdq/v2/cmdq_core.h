@@ -139,8 +139,10 @@ struct DumpFirstErrorStruct {
 
 #define CMDQ_LOG(string, args...) \
 do {			\
-	pr_notice("[CMDQ]"string, ##args); \
-	cmdq_core_save_first_dump("[CMDQ]"string, ##args); \
+	if (0) { \
+		pr_notice("[CMDQ]"string, ##args); \
+		cmdq_core_save_first_dump("[CMDQ]"string, ##args); \
+	} \
 } while (0)
 
 #define CMDQ_MSG(string, args...) \

@@ -181,4 +181,9 @@ extern void thermal_set_big_core_speed
  */
 extern int mtk_cooler_is_abcct_unlimit(void);
 
+#ifdef VENDOR_EDIT
+/*wenhui.chen@Camera.DRV 20201029 add for flashlight NTC*/
+extern int get_FlashLightNTC_temp(void);
+#endif
+
 #endif /* __MT6768_THERMAL_H__ */
