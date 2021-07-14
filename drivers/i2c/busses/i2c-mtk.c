@@ -455,6 +455,7 @@ static inline void mt_i2c_wait_done(struct mt_i2c *i2c, u16 ch_off)
 
 static inline void mt_i2c_init_hw(struct mt_i2c *i2c)
 {
+
 	/* clear interrupt status */
 	i2c_writew_shadow(0, i2c, OFFSET_INTR_MASK);
 	i2c->irq_stat = i2c_readw_shadow(i2c, OFFSET_INTR_STAT);
@@ -488,6 +489,7 @@ static inline void mt_i2c_init_hw(struct mt_i2c *i2c)
 		dump_dma_regs();
 		WARN_ON(1);
 	}
+
 }
 
 /* calculate i2c port speed */
@@ -589,15 +591,36 @@ static int i2c_set_speed(struct mt_i2c *i2c, unsigned int clk_src_in_hz)
 			speed_hz, &step_cnt, &sample_cnt);
 		if (ret < 0)
 			return ret;
+#ifdef VENDOR_EDIT
+/* zhijie.Li@BSP.CHG.Basic, 2019/11/26, lzj Modify for I2C5(high speed mode) duty ratio */
 
+			i2c->high_speed_reg = I2C_TIME_DEFAULT_VALUE | I2C_HS_SPEED |
+					I2C_HS_HOLD_TIME |
+					(sample_cnt & I2C_TIMING_SAMPLE_COUNT_MASK) << 12 |
+					((step_cnt - 1) & I2C_TIMING_SAMPLE_COUNT_MASK) << 8;
+
+#else
 		i2c->high_speed_reg = I2C_TIME_DEFAULT_VALUE |
 			(sample_cnt & I2C_TIMING_SAMPLE_COUNT_MASK) << 12 |
 			(step_cnt & I2C_TIMING_SAMPLE_COUNT_MASK) << 8;
+#endif
 
 		i2c->timing_reg =
 			(l_sample_cnt & I2C_TIMING_SAMPLE_COUNT_MASK) << 8 |
 			(l_step_cnt & I2C_TIMING_STEP_DIV_MASK) << 0;
 
+#ifdef VENDOR_EDIT
+/* Jianchao.Shi@BSP.CHG.Basic, 2019/06/24, sjc Modify for I2C5(high speed mode) duty ratio */
+
+			if (i2c->dev_comp->set_ltiming) {
+				i2c->ltiming_reg = I2C_HS_HOLD_SEL | (l_sample_cnt << 6) |
+					(l_step_cnt << 0) |
+					(sample_cnt &
+						I2C_TIMING_SAMPLE_COUNT_MASK) << 12 |
+					((step_cnt + 1) & I2C_TIMING_SAMPLE_COUNT_MASK) << 9;
+         }
+	
+#else
 		if (i2c->dev_comp->set_ltiming) {
 			i2c->ltiming_reg = (l_sample_cnt << 6) |
 				(l_step_cnt << 0) |
@@ -605,6 +628,7 @@ static int i2c_set_speed(struct mt_i2c *i2c, unsigned int clk_src_in_hz)
 					I2C_TIMING_SAMPLE_COUNT_MASK) << 12 |
 				(step_cnt & I2C_TIMING_SAMPLE_COUNT_MASK) << 9;
 		}
+#endif /*VENDOR_EDIT*/
 	} else {
 		if (speed_hz > I2C_DEFAUT_SPEED
 			&& speed_hz <= MAX_FS_MODE_SPEED
@@ -901,7 +925,16 @@ static int mt_i2c_do_transfer(struct mt_i2c *i2c)
 	/* If use i2c pin from PMIC mt6397 side, need set PATH_DIR first */
 	if (i2c->have_pmic)
 		i2c_writew(I2C_CONTROL_WRAPPER, i2c, OFFSET_PATH_DIR);
+#ifndef VENDOR_EDIT
+/*zhijie.Li@BSP.CHG.Basic, 2019/11/26, lzj Modify for I2C5(high speed mode) duty ratio*/
 	control_reg = I2C_CONTROL_ACKERR_DET_EN | I2C_CONTROL_CLK_EXT_EN;
+#else
+	if (speed_hz > 400000)
+		control_reg = I2C_CONTROL_ACKERR_DET_EN;
+	else
+		control_reg = I2C_CONTROL_ACKERR_DET_EN |
+			I2C_CONTROL_CLK_EXT_EN;
+#endif
 	if (isDMA == true) /* DMA */
 		control_reg |=
 			I2C_CONTROL_DMA_EN |
