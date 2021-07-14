@@ -97,8 +97,6 @@ struct silfp_msg_list {
 };
 #endif /* !BSP_SIL_NETLINK */
 
-extern int g_fingerprint;
-
 struct silfp_data {
     dev_t			devt;
     struct cdev cdev;
@@ -1501,7 +1499,6 @@ int silfp_dev_init(void)
 	sim_gpio = of_get_named_gpio(node, "oppo,fp-id0", 0);
 	sim_val = __gpio_get_value(sim_gpio);
 */
-	sim_val = g_fingerprint;
     LOG_MSG_DEBUG(ERR_LOG,"%s, Get FP_ID from GPIO_PIN is / FP_ID = %d.\n", __func__,sim_val);
 
     if(0 == sim_val){ 
