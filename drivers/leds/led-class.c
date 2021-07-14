@@ -24,6 +24,16 @@
 #include "leds.h"
 
 static struct class *leds_class;
+//Jiantao.Liu@ODM_WT.MM.Display.Lcd, 2020/07/08, LCD backlight switch 11bit to 12bit
+extern unsigned int backlight_twelve_bit_flag;
+
+#ifdef VENDOR_EDIT
+/*
+* Ling.Guo@PSW.MM.Display.LCD.Stability, 2019/01/28,
+* add for oppo brightness and max_brightness node
+*/
+//extern unsigned long oppo_display_brightness;
+#endif
 
 static ssize_t brightness_show(struct device *dev,
 		struct device_attribute *attr, char *buf)
@@ -61,6 +71,15 @@ static ssize_t brightness_store(struct device *dev,
 	ret = size;
 unlock:
 	mutex_unlock(&led_cdev->led_access);
+
+	#ifdef VENDOR_EDIT
+	/*
+	* Ling.Guo@PSW.MM.Display.LCD.Stability, 2019/01/28,
+	* add for oppo brightness and max_brightness node
+	*/
+	//oppo_display_brightness = state;
+	#endif
+
 	return ret;
 }
 static DEVICE_ATTR_RW(brightness);
@@ -291,9 +310,18 @@ int of_led_classdev_register(struct device *parent, struct device_node *np,
 	list_add_tail(&led_cdev->node, &leds_list);
 	up_write(&leds_list_lock);
 
-	if (!led_cdev->max_brightness)
+	if (!led_cdev->max_brightness){
+#ifdef ODM_WT_EDIT
+//Hao.liang@ODM_WT.MM.Display.Lcd, 2019/10/30, LCD backlight switch 8bit to 11bit
+//Jiantao.Liu@ODM_WT.MM.Display.Lcd, 2020/07/08, LCD backlight switch 11bit to 12bit
+	if (1 == backlight_twelve_bit_flag)
+		led_cdev->max_brightness = LED_4095;
+	else
+		led_cdev->max_brightness = LED_2047;
+#else
 		led_cdev->max_brightness = LED_FULL;
-
+#endif
+}
 	led_update_brightness(led_cdev);
 
 	led_init_core(led_cdev);
