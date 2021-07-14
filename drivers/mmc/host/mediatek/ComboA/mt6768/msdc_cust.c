@@ -270,33 +270,25 @@ void msdc_sd_power(struct msdc_host *host, u32 on)
 		msdc_set_rdsel(host, MSDC_TDRDSEL_3V, 0);
 		if (host->hw->flags & MSDC_SD_NEED_POWER)
 			card_on = 1;
+#ifdef ODM_WT_EDIT
+//Haibo.Dong@ODM_WT.Kernel.Sdcard, 2021/01/12, Modify for fix sd vdd power issue when sd is plugged in
+		if (host->card_inserted || host->power_flash)
+#endif
+		{
+			/* Disable VMCH OC */
+			if (!card_on)
+				pmic_enable_interrupt(INT_VMCH_OC, 0, "sdcard");
 
-		/* Disable VMCH OC */
-		if (!card_on)
-			pmic_enable_interrupt(INT_VMCH_OC, 0, "sdcard");
+			/* VMCH VOLSEL */
+			msdc_ldo_power(card_on, host->mmc->supply.vmmc, VOL_3000,
+				&host->power_flash);
 
-		/* VMCH VOLSEL */
-		msdc_ldo_power(card_on, host->mmc->supply.vmmc, VOL_3000,
-			&host->power_flash);
 
-		if (card_on) {
-			if (host->hw->cd_level == 1) {
-				/* 1: high; 0: low, vmch fast off
-				 * hw_det default high active
-				 */
-				pmic_set_register_value(PMIC_RG_LDO_VMCH_SD_POL,
-							0);
+			/* Enable VMCH OC */
+			if (card_on) {
+				mdelay(3);
+				pmic_enable_interrupt(INT_VMCH_OC, 1, "sdcard");
 			}
-			pmic_set_register_value(PMIC_RG_LDO_VMCH_SD_EN, 1);
-		} else {
-			udelay(1500);
-			pmic_set_register_value(PMIC_RG_LDO_VMCH_SD_EN, 0);
-		}
-
-		/* Enable VMCH OC */
-		if (card_on) {
-			mdelay(3);
-			pmic_enable_interrupt(INT_VMCH_OC, 1, "sdcard");
 		}
 
 		/* VMC VOLSEL */
