@@ -27,6 +27,7 @@ struct bio_crypt_ctx {
 	struct super_block  *bc_sb;
 	unsigned long       bc_ino;
 	unsigned long       bc_iv;              /* for BC_IV_CTX only */
+	unsigned int        hashed_info;        /* for f2fs+emmc hwcmdq*/
 	void                *bc_info;
 	void                *(*bc_info_act)(void *ci, int act);
 #ifdef CONFIG_HIE_DUMMY_CRYPT
@@ -258,6 +259,10 @@ enum req_flag_bits {
 	__REQ_INTEGRITY,	/* I/O includes block integrity payload */
 	__REQ_FUA,		/* forced unit access */
 	__REQ_PREFLUSH,		/* request for cache flush */
+#ifdef VENDOR_EDIT
+	/*Huacai.Zhou@PSW.BSP.Kernel.Performance, 2018-04-28, add foreground task io opt*/
+	__REQ_FG,		/* foreground activity */
+#endif /*VENDOR_EDIT*/
 	__REQ_RAHEAD,		/* read ahead, can fail anytime */
 	__REQ_BACKGROUND,	/* background IO */
 
@@ -284,7 +289,10 @@ enum req_flag_bits {
 #define REQ_PREFLUSH		(1ULL << __REQ_PREFLUSH)
 #define REQ_RAHEAD		(1ULL << __REQ_RAHEAD)
 #define REQ_BACKGROUND		(1ULL << __REQ_BACKGROUND)
-
+#ifdef VENDOR_EDIT
+/*Huacai.Zhou@PSW.BSP.Kernel.Performance, 2018-04-28, add foreground task io opt*/
+#define REQ_FG			(1ULL << __REQ_FG)
+#endif /*VENDOR_EDIT*/
 #define REQ_NOUNMAP		(1ULL << __REQ_NOUNMAP)
 #define REQ_NOWAIT		(1ULL << __REQ_NOWAIT)
 
