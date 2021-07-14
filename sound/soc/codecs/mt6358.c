@@ -113,6 +113,10 @@ enum {
 };
 
 #define REG_STRIDE 2
+#ifdef ODM_WT_EDIT
+// Zengchao.Duan@ODM_WT.MM.AudioDriver.Machine, 2020/08/06, Pop noises in left headphone, when you change output in FM
+static unsigned int pull_down_stay_enable;
+#endif
 
 #ifdef ANALOG_HPTRIM
 struct ana_offset {
@@ -1551,8 +1555,16 @@ static int mtk_hp_enable(struct mt6358_priv *priv)
 #endif
 	dev_info(priv->dev, "+%s()\n", __func__);
 
+#ifdef ODM_WT_EDIT
+// Zengchao.Duan@ODM_WT.MM.AudioDriver.Machine, 2020/08/06, Pop noises in left headphone, when you change output in FM
+	if (!pull_down_stay_enable) {
+		/* Pull-down HPL/R to AVSS28_AUD */
+		hp_pull_down(priv, true);
+	}
+#else
 	/* Pull-down HPL/R to AVSS28_AUD */
 	hp_pull_down(priv, true);
+#endif
 	/* release HP CMFB gate rstb */
 	regmap_update_bits(priv->regmap, MT6358_AUDDEC_ANA_CON4,
 			   0x1 << 6, 0x1 << 6);
@@ -1765,7 +1777,10 @@ static int mtk_hp_disable(struct mt6358_priv *priv)
 
 	/* Set HPL/HPR gain to mute */
 	regmap_write(priv->regmap, MT6358_ZCD_CON2, DL_GAIN_N_10DB_REG);
-
+#ifdef ODM_WT_EDIT
+    // Zengchao.Duan@ODM_WT.mm.audiodriver.Machine, 2019/11/12, remove hpl & hpr inside 470 ohm
+	regmap_update_bits(priv->regmap, MT6358_AUDDEC_ANA_CON2, 0xff, 0x0);
+#endif
 	/* Increase ESD resistance of AU_REFN */
 	regmap_update_bits(priv->regmap, MT6358_AUDDEC_ANA_CON2,
 			   0x1 << 14, 0x0);
@@ -1773,9 +1788,16 @@ static int mtk_hp_disable(struct mt6358_priv *priv)
 	/* Set HP CMFB gate rstb */
 	regmap_update_bits(priv->regmap, MT6358_AUDDEC_ANA_CON4,
 			   0x1 << 6, 0x0);
+#ifdef ODM_WT_EDIT
+// Zengchao.Duan@ODM_WT.MM.AudioDriver.Machine, 2020/08/06, Pop noises in left headphone, when you change output in FM
+	if (!pull_down_stay_enable) {
+		/* disable Pull-down HPL/R to AVSS28_AUD */
+		hp_pull_down(priv, false);
+	}
+#else
 	/* disable Pull-down HPL/R to AVSS28_AUD */
 	hp_pull_down(priv, false);
-
+#endif
 	return 0;
 }
 
@@ -1807,9 +1829,16 @@ static int mtk_hp_spk_enable(struct mt6358_priv *priv)
 	}
 #endif
 	dev_info(priv->dev, "+%s()\n", __func__);
-
+#ifdef ODM_WT_EDIT
+// Zengchao.Duan@ODM_WT.MM.AudioDriver.Machine, 2020/08/06, Pop noises in left headphone, when you change output in FM
+	if (!pull_down_stay_enable) {
+		/* Pull-down HPL/R to AVSS28_AUD */
+		hp_pull_down(priv, true);
+	}
+#else
 	/* Pull-down HPL/R to AVSS28_AUD */
 	hp_pull_down(priv, true);
+#endif
 	/* release HP CMFB gate rstb */
 	regmap_update_bits(priv->regmap, MT6358_AUDDEC_ANA_CON4,
 			0x1 << 6, 0x1 << 6);
@@ -2062,6 +2091,10 @@ static int mtk_hp_spk_disable(struct mt6358_priv *priv)
 
 	/* Set HPL/HPR gain to mute */
 	regmap_write(priv->regmap, MT6358_ZCD_CON2, DL_GAIN_N_40DB_REG);
+#ifdef ODM_WT_EDIT
+    // Zengchao.Duan@ODM_WT.mm.audiodriver.Machine, 2019/11/12, remove hpl & hpr inside 470 ohm
+	regmap_update_bits(priv->regmap, MT6358_AUDDEC_ANA_CON2, 0xff, 0x0);
+#endif
 	/* Increase ESD resistance of AU_REFN */
 	regmap_update_bits(priv->regmap, MT6358_AUDDEC_ANA_CON2,
 			0x1 << 14, 0x0);
@@ -2069,9 +2102,16 @@ static int mtk_hp_spk_disable(struct mt6358_priv *priv)
 	/* Set HP CMFB gate rstb */
 	regmap_update_bits(priv->regmap, MT6358_AUDDEC_ANA_CON4,
 			0x1 << 6, 0x0);
+#ifdef ODM_WT_EDIT
+// Zengchao.Duan@ODM_WT.MM.AudioDriver.Machine, 2020/08/06, Pop noises in left headphone, when you change output in FM
+	if (!pull_down_stay_enable) {
+		/* disable Pull-down HPL/R to AVSS28_AUD */
+		hp_pull_down(priv, false);
+	}
+#else
 	/* disable Pull-down HPL/R to AVSS28_AUD */
 	hp_pull_down(priv, false);
-
+#endif
 	return 0;
 }
 
@@ -2158,6 +2198,14 @@ static int mtk_hp_impedance_disable(struct mt6358_priv *priv)
 	/* Disable AUD_CLK */
 	regmap_update_bits(priv->regmap, MT6358_AUDDEC_ANA_CON13, 0x1, 0x0);
 
+#ifdef ODM_WT_EDIT
+// Zengchao.Duan@ODM_WT.MM.AudioDriver.Machine, 2020/08/06, Pop noises in left headphone, when you change output in FM
+	if (pull_down_stay_enable) {
+		/* Pull-down HPL/R to AVSS28_AUD */
+		hp_pull_down(priv, true);
+	}
+#endif
+
 	/* Disable HP main output stage */
 	regmap_update_bits(priv->regmap, MT6358_AUDDEC_ANA_CON1, 0x3, 0x0);
 
@@ -2187,7 +2235,11 @@ static int mtk_hp_impedance_disable(struct mt6358_priv *priv)
 	regmap_write(priv->regmap, MT6358_ZCD_CON2, DL_GAIN_N_10DB_REG);
 
 	/* Set HPP/N STB enhance circuits */
+#ifndef ODM_WT_EDIT
 	regmap_update_bits(priv->regmap, MT6358_AUDDEC_ANA_CON2, 0xff, 0x33);
+#else
+	regmap_update_bits(priv->regmap, MT6358_AUDDEC_ANA_CON2, 0xff, 0x0);
+#endif
 
 	/* Increase ESD resistance of AU_REFN */
 	regmap_update_bits(priv->regmap, MT6358_AUDDEC_ANA_CON2,
@@ -2671,8 +2723,6 @@ static int mt_vow_aud_lpw_event(struct snd_soc_dapm_widget *w,
 
 	switch (event) {
 	case SND_SOC_DAPM_PRE_PMU:
-		/* add delay for RC Calibration */
-		usleep_range(1000, 1200);
 		/* Enable audio uplink LPW mode */
 		/* Enable Audio ADC 1st Stage LPW */
 		/* Enable Audio ADC 2nd & 3rd LPW */
@@ -2837,8 +2887,14 @@ static int mt6358_amic_enable(struct mt6358_priv *priv)
 			break;
 		}
 		/* Enable MICBIAS0, MISBIAS0 = 1P9V */
+#ifdef ODM_WT_EDIT
+// Zengchao.Duan@ODM_WT.MM.Audiodriver.Machine, 2019/11/05, Add for change MICBIAS to 2.5V
 		regmap_update_bits(priv->regmap, MT6358_AUDENC_ANA_CON9,
-				   0xff, 0x21);
+				   0xff, 0x51);
+#else
+        regmap_update_bits(priv->regmap, MT6358_AUDENC_ANA_CON9,
+                   0xff, 0x21);
+#endif
 	}
 
 	/* mic bias 1 */
@@ -2848,8 +2904,14 @@ static int mt6358_amic_enable(struct mt6358_priv *priv)
 			regmap_write(priv->regmap,
 				     MT6358_AUDENC_ANA_CON10, 0x0161);
 		else
+#ifdef ODM_WT_EDIT
+            // Zengchao.Duan@ODM_WT.MM.Audiodriver.Machine, 2020/01/21, Add for change ACCDET MICBIAS to 2.7V
+            regmap_write(priv->regmap,
+                     MT6358_AUDENC_ANA_CON10, 0x0071);
+#else
 			regmap_write(priv->regmap,
 				     MT6358_AUDENC_ANA_CON10, 0x0061);
+#endif
 	}
 
 	/* set mic pga gain */
@@ -3122,8 +3184,14 @@ static int mt6358_vow_amic_enable(struct mt6358_priv *priv)
 			regmap_write(priv->regmap,
 				     MT6358_AUDENC_ANA_CON10, 0x0161);
 		else
+#ifdef ODM_WT_EDIT
+            // Zengchao.Duan@ODM_WT.MM.Audiodriver.Machine, 2020/01/21, Add for change ACCDET MICBIAS to 2.7V
+            regmap_write(priv->regmap,
+                     MT6358_AUDENC_ANA_CON10, 0x0071);
+#else
 			regmap_write(priv->regmap,
 				     MT6358_AUDENC_ANA_CON10, 0x0061);
+#endif
 	}
 	/* mic bias 0 */
 	if (mux_pga_l == PGA_MUX_AIN2) {
@@ -4147,10 +4215,16 @@ static void start_trim_hardware(struct mt6358_priv *priv, bool buffer_on)
 
 	/* Enable AUDGLB */
 	mt6358_set_aud_global_bias(priv, true);
-
+#ifdef ODM_WT_EDIT
+// Zengchao.Duan@ODM_WT.MM.AudioDriver.Machine, 2020/08/06, Pop noises in left headphone, when you change output in FM
+	if (!pull_down_stay_enable) {
+		/* Pull-down HPL/R to AVSS30_AUD */
+		hp_pull_down(priv, true);
+	}
+#else
 	/* Pull-down HPL/R to AVSS30_AUD */
 	hp_pull_down(priv, true);
-
+#endif
 	/* release HP CMFB gate rstb */
 	regmap_update_bits(priv->regmap, MT6358_AUDDEC_ANA_CON4,
 			   0x1 << 6, 0x1 << 6);
@@ -4402,6 +4476,10 @@ static void stop_trim_hardware(struct mt6358_priv *priv)
 
 	/* Set HPL/HPR gain to mute */
 	regmap_write(priv->regmap, MT6358_ZCD_CON2, DL_GAIN_N_40DB_REG);
+#ifdef ODM_WT_EDIT
+    // Zengchao.Duan@ODM_WT.mm.audiodriver.Machine, 2019/11/12, remove hpl & hpr inside 470 ohm
+	regmap_update_bits(priv->regmap, MT6358_AUDDEC_ANA_CON2, 0xff, 0x0);
+#endif
 	/* Increase ESD resistance of AU_REFN */
 	regmap_update_bits(priv->regmap, MT6358_AUDDEC_ANA_CON2,
 			0x1 << 14, 0x0);
@@ -4431,10 +4509,16 @@ static void stop_trim_hardware(struct mt6358_priv *priv)
 	/* Set HP CMFB gate rstb */
 	regmap_update_bits(priv->regmap, MT6358_AUDDEC_ANA_CON4,
 			   0x1 << 6, 0x0);
-
+#ifdef ODM_WT_EDIT
+// Zengchao.Duan@ODM_WT.MM.AudioDriver.Machine, 2020/08/06, Pop noises in left headphone, when you change output in FM
+	if (!pull_down_stay_enable) {
+		/* Disable Pull-down HPL/R to AVSS30_AUD  */
+		hp_pull_down(priv, false);
+	}
+#else
 	/* Disable Pull-down HPL/R to AVSS30_AUD  */
 	hp_pull_down(priv, false);
-
+#endif
 	/* disable AUDGLB */
 	mt6358_set_aud_global_bias(priv, false);
 
@@ -4456,9 +4540,16 @@ static void start_trim_hardware_with_lo(struct mt6358_priv *priv,
 	/* Enable AUDGLB */
 	mt6358_set_aud_global_bias(priv, true);
 
+#ifdef ODM_WT_EDIT
+// Zengchao.Duan@ODM_WT.MM.AudioDriver.Machine, 2020/08/06, Pop noises in left headphone, when you change output in FM
+	if (!pull_down_stay_enable) {
+		/* Pull-down HPL/R to AVSS30_AUD */
+		hp_pull_down(priv, true);
+	}
+#else
 	/* Pull-down HPL/R to AVSS30_AUD */
 	hp_pull_down(priv, true);
-
+#endif
 	/* release HP CMFB gate rstb */
 	regmap_update_bits(priv->regmap, MT6358_AUDDEC_ANA_CON4,
 			   0x1 << 6, 0x1 << 6);
@@ -4745,7 +4836,10 @@ static void stop_trim_hardware_with_lo(struct mt6358_priv *priv)
 
 	/* Set HPL/HPR gain to mute */
 	regmap_write(priv->regmap, MT6358_ZCD_CON2, DL_GAIN_N_40DB_REG);
-
+#ifdef ODM_WT_EDIT
+    // Zengchao.Duan@ODM_WT.mm.audiodriver.Machine, 2019/11/12, remove hpl & hpr inside 470 ohm
+	regmap_update_bits(priv->regmap, MT6358_AUDDEC_ANA_CON2, 0xff, 0x0);
+#endif
 	/* Increase ESD resistance of AU_REFN */
 	regmap_update_bits(priv->regmap, MT6358_AUDDEC_ANA_CON2,
 			0x1 << 14, 0x0);
@@ -4775,10 +4869,16 @@ static void stop_trim_hardware_with_lo(struct mt6358_priv *priv)
 	/* Set HP CMFB gate rstb */
 	regmap_update_bits(priv->regmap, MT6358_AUDDEC_ANA_CON4,
 			   0x1 << 6, 0x0);
-
+#ifdef ODM_WT_EDIT
+// Zengchao.Duan@ODM_WT.MM.AudioDriver.Machine, 2020/08/06, Pop noises in left headphone, when you change output in FM
+	if (!pull_down_stay_enable) {
+		/* Disable Pull-down HPL/R to AVSS30_AUD  */
+		hp_pull_down(priv, false);
+	}
+#else
 	/* Disable Pull-down HPL/R to AVSS30_AUD  */
 	hp_pull_down(priv, false);
-
+#endif
 	/* disable AUDGLB */
 	mt6358_set_aud_global_bias(priv, false);
 
@@ -5934,6 +6034,12 @@ static void get_hp_trim_offset(struct mt6358_priv *priv, bool force)
 static int dc_trim_thread(void *arg)
 {
 	struct mt6358_priv *priv = arg;
+
+#ifdef ODM_WT_EDIT
+// Zengchao.Duan@ODM_WT.MM.AudioDriver.Machine, 2020/08/06, Pop noises in left headphone, when you change output in FM
+	if (pull_down_stay_enable)
+		hp_pull_down(priv, true);
+#endif
 
 	get_hp_trim_offset(priv, false);
 #ifdef CONFIG_MTK_ACCDET
@@ -7666,7 +7772,10 @@ static int mt6358_platform_driver_probe(struct platform_device *pdev)
 #ifdef CONFIG_MTK_PMIC_WRAP
 	struct device_node *pwrap_node;
 #endif
-
+#ifdef ODM_WT_EDIT
+// Zengchao.Duan@ODM_WT.MM.AudioDriver.Machine, 2020/08/06, Pop noises in left headphone, when you change output in FM
+	int ret;
+#endif
 	priv = devm_kzalloc(&pdev->dev,
 			    sizeof(struct mt6358_priv),
 			    GFP_KERNEL);
@@ -7692,6 +7801,22 @@ static int mt6358_platform_driver_probe(struct platform_device *pdev)
 	}
 #endif
 
+#ifdef ODM_WT_EDIT
+// Zengchao.Duan@ODM_WT.MM.AudioDriver.Machine, 2020/08/06, Pop noises in left headphone, when you change output in FM
+	/* get pull_down_stay_enable flag */
+	ret = of_property_read_u32(pdev->dev.of_node,
+				   "mtk_pull_down_stay_enable",
+				   &pull_down_stay_enable);
+	dev_info(&pdev->dev,
+			"%s(), get pull_down_stay_enable = %d.\n",
+			__func__, pull_down_stay_enable);
+	if (ret) {
+		pull_down_stay_enable = 0;
+		dev_info(&pdev->dev,
+			"%s(), get pull_down_stay_enable fail, default 0\n",
+			__func__);
+	}
+#endif
 	if (IS_ERR(priv->regmap))
 		return PTR_ERR(priv->regmap);
 
