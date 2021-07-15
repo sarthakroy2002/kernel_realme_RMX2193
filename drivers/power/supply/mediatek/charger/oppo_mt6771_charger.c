@@ -127,6 +127,7 @@ extern struct oppo_chg_operations  oppo_chg_rt9471_ops;
 extern struct oppo_chg_operations  oppo_chg_rt9467_ops;
 extern struct oppo_chg_operations  oppo_chg_bq2589x_ops;
 extern struct oppo_chg_operations  oppo_chg_bq2591x_ops;
+extern struct oppo_chg_operations  oppo_chg_sy6974_ops;
 /*Shouli.Wang@ODM_WT.BSP.CHG 2019/11/12, add for usbtemp*/
 struct iio_channel *usb_chan1; //usb_temp_auxadc_channel 1
 struct iio_channel *usb_chan2; //usb_temp_auxadc_channel 2
@@ -2022,6 +2023,10 @@ static int oppo_charger_probe(struct platform_device *pdev)
 					case (1<<RT9471D|1<<BQ2589X):
 						oppo_chip->chg_ops = &oppo_chg_bq2589x_ops;
 						oppo_chip->sub_chg_ops = &oppo_chg_rt9471_ops;
+						break;
+					case (1<<SY6974|1<<BQ2589X):
+						oppo_chip->chg_ops = &oppo_chg_bq2589x_ops;
+						oppo_chip->sub_chg_ops = &oppo_chg_sy6974_ops;
 						break;
 					default:
 						oppo_chip->chg_ops = &oppo_chg_default_ops;
